@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ashraf Studio — Sunplus Firmware Editor</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    min-height: 100vh;
+    padding: 15px;
+    line-height: 1.6;
+}
+
+.container { max-width: 950px; margin: 0 auto; }
+
+.header {
+    text-align: center;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #007acc, #005a9e);
+    border-radius: 14px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 30px rgba(0, 122, 204, 0.3);
+}
+.header h1 { color: white; font-size: 28px; margin-bottom: 6px; }
+.header .sub { color: rgba(255,255,255,0.9); font-size: 14px; }
+.header .dev {
+    color: rgba(255,255,255,0.75);
+    font-size: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #3c3c3c;
+    flex-wrap: wrap;
+}
+.tab {
+    padding: 12px 18px;
+    background: #2d2d30;
+    color: #d4d4d4;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+.tab:hover { background: #3c3c3c; }
+.tab.active {
+    background: #007acc;
+    color: white;
+    border-bottom-color: #007acc;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.card {
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 15px;
+}
+.card h2 {
+    color: #4fc3f7;
+    font-size: 17px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+.steps {
+    background: #1a1a1a;
+    border-right: 3px solid #007acc;
+    border-radius: 6px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+}
+.steps ol {
+    padding-right: 22px;
+    color: #b0b0b0;
+    font-size: 14px;
+}
+.steps li { margin-bottom: 6px; }
+.steps strong { color: #4fc3f7; }
+
+.file-zone {
+    border: 2px dashed #3c3c3c;
+    border-radius: 10px;
+    padding: 22px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 12px;
+    position: relative;
+}
+.file-zone:hover { border-color: #007acc; background: #2d2d30; }
+.file-zone.active {
+    border-color: #00ff00;
+    background: #1e3a1e;
+    transform: scale(1.01);
+}
+.file-zone.has-file {
+    border-color: #00ff88;
+    border-style: solid;
+    background: #1a2e1a;
+}
+.file-zone input[type="file"] { display: none; }
+.file-zone .icon { font-size: 38px; margin-bottom: 8px; }
+.file-zone .title {
+    font-size: 15px;
+    color: #d4d4d4;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+.file-zone .hint { font-size: 12px; color: #888; }
+.file-zone .filename {
+    color: #00ff88;
+    font-size: 13px;
+    margin-top: 10px;
+    font-family: Consolas, monospace;
+    word-break: break-all;
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+    margin-top: 5px;
+}
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(46, 125, 50, 0.4);
+}
+.btn:disabled { background: #3c3c3c; cursor: not-allowed; opacity: 0.5; }
+
+.loading { display: none; text-align: center; padding: 25px; }
+.loading.active { display: block; }
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #3c3c3c;
+    border-top-color: #007acc;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.result {
+    display: none;
+    padding: 18px;
+    border-radius: 10px;
+    margin-top: 15px;
+    animation: fadeIn 0.4s;
+}
+.result.success {
+    display: block;
+    background: #1a3a1a;
+    border: 1px solid #2e7d32;
+}
+.result.error {
+    display: block;
+    background: #3a1e1e;
+    border: 1px solid #c62828;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.result h3 { margin-bottom: 12px; font-size: 16px; }
+.result.success h3 { color: #66bb6a; }
+.result.error h3 { color: #ef5350; }
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.info-item {
+    padding: 10px 12px;
+    background: #121212;
+    border-radius: 8px;
+    border-left: 3px solid #007acc;
+}
+.info-item .label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+}
+.info-item .value {
+    font-family: Consolas, monospace;
+    color: #4fc3f7;
+    font-size: 13px;
+    word-break: break-all;
+}
+.info-item.full { grid-column: 1 / -1; }
+
+.download-btn {
+    display: inline-block;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #007acc, #005a9e);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 15px;
+    margin-top: 10px;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+}
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 122, 204, 0.4);
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    background: #252526;
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    color: #64ffda;
+    font-family: Consolas;
+    font-size: 14px;
+}
+.form-input:focus {
+    outline: none;
+    border-color: #007acc;
+}
+
+.form-label {
+    display: block;
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.note-box {
+    background: #1a1a1a;
+    padding: 10px;
+    border-radius: 6px;
+    border-right: 3px solid #ef6c00;
+    margin-bottom: 15px;
+}
+.note-box p { color: #ffb74d; font-size: 12px; }
+.note-box code {
+    color: #64ffda;
+    background: #252526;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: #007acc;
+    color: white;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 6px;
+}
+.badge.green { background: #2e7d32; }
+.badge.orange { background: #ef6c00; }
+
+.footer {
+    text-align: center;
+    color: #555;
+    font-size: 12px;
+    padding: 25px 20px;
+    margin-top: 20px;
+    border-top: 1px solid #2d2d30;
+}
+.footer .heart { color: #e91e63; }
+.footer .name { color: #4fc3f7; font-weight: bold; }
+
+@media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .header h1 { font-size: 20px; }
+    .tab { padding: 10px 12px; font-size: 12px; }
+    .card { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🎬 Ashraf Studio</h1>
+        <div class="sub">Sunplus Firmware Editor — Web Edition</div>
+        <div class="dev">
+            Developed by <strong>Ashraf Bedair</strong> | © 2025 — All Rights Reserved
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab(event, 'vanilla')">
+            📺 Vanilla (تلقائي)
+        </button>
+        <button class="tab" onclick="switchTab(event, 'manual')">
+            🎯 1506 (يدوي)
+        </button>
+        <button class="tab" onclick="switchTab(event, 'inspect')">
+            🔍 فحص ملف
+        </button>
+        <button class="tab" onclick="switchTab(event, 'about')">
+            ℹ️ حول
+        </button>
+    </div>
+
+    <!-- TAB: Vanilla -->
+    <div id="tab-vanilla" class="tab-content active">
+
+        <div class="card">
+            <h2>📋 خطوات الاستخدام</h2>
+            <div class="steps">
+                <ol>
+                    <li>ارفع <strong>السوفت الأصلي</strong> (اللي شغال على الرسيفر)</li>
+                    <li>ارفع <strong>السوفت الهدف</strong> (اللي عايز تشغله)</li>
+                    <li>اضغط زر <strong>"تعديل وتحميل"</strong></li>
+                    <li>البرنامج هيكتشف البصمة تلقائياً (BIN_0S / SPHE)</li>
+                    <li>هينقل الآيدي و<span style="color:#66bb6a">يصلح الحماية تلقائياً</span></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📁 الملفات</h2>
+
+            <div class="file-zone" id="zone-original">
+                <input type="file" id="file-original" accept=".bin">
+                <div class="icon">📥</div>
+                <div class="title">السوفت الأصلي</div>
+                <div class="hint">اضغط أو اسحب الملف هنا (.bin)</div>
+                <div class="filename" id="name-original"></div>
+            </div>
+
+            <div class="file-zone" id="zone-target">
+                <input type="file" id="file-target" accept=".bin">
+                <div class="icon">📤</div>
+                <div class="title">السوفت الهدف</div>
+                <div class="hint">اضغط أو اسحب الملف هنا (.bin)</div>
+                <div class="filename" id="name-target"></div>
+            </div>
+
+            <button class="btn" id="process-btn" disabled>
+                ⚡ تعديل وتحميل السوفت
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>جارٍ المعالجة... الرجاء الانتظار</p>
+            </div>
+
+            <div class="result" id="result"></div>
+        </div>
+
+    </div>
+
+    <!-- TAB: Manual 1506 -->
+    <div id="tab-manual" class="tab-content">
+
+        <div class="card">
+            <h2>🎯 معالج 1506 (يدوي)</h2>
+            <p style="color:#888; font-size:13px; margin-bottom:15px;">
+                للمعالجات اللي مش بتظهر فيها البصمة تلقائياً.
+                أدخل العنوان والطول بنفسك.
+            </p>
+
+            <div class="steps">
+                <ol>
+                    <li>حدد <strong>العنوان (Hex)</strong> بتاع الآيدي في السوفت</li>
+                    <li>حدد <strong>الطول</strong> بالبايت</li>
+                    <li>ارفع السوفتين → اضغط <strong>تعديل</strong></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ الإعدادات</h2>
+
+            <div class="form-row">
+                <div>
+                    <label class="form-label">العنوان (Hex):</label>
+                    <input type="text" id="manual-offset" value="01A000"
+                           class="form-input" placeholder="مثال: 01A000">
+                </div>
+                <div>
+                    <label class="form-label">الطول (بايت):</label>
+                    <select id="manual-length" class="form-input"
+                            style="color:#d4d4d4; font-family:inherit;">
+                        <option value="4">4 بايت</option>
+                        <option value="5" selected>5 بايت</option>
+                        <option value="8">8 بايت</option>
+                        <option value="16">16 بايت</option>
+                        <option value="32">32 بايت</option>
+                        <option value="64">64 بايت</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="note-box">
+                <p>💡 <strong>معلومة:</strong> العنوان الشائع للـ Customer ID في 1506 هو
+                    <code>0x01A000</code></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📁 الملفات</h2>
+
+            <div class="file-zone" id="zone-m-original">
+                <input type="file" id="file-m-original" accept=".bin">
+                <div class="icon">📥</div>
+                <div class="title">السوفت الأصلي</div>
+                <div class="hint">اضغط أو اسحب الملف هنا (.bin)</div>
+                <div class="filename" id="name-m-original"></div>
+            </div>
+
+            <div class="file-zone" id="zone-m-target">
+                <input type="file" id="file-m-target" accept=".bin">
+                <div class="icon">📤</div>
+                <div class="title">السوفت الهدف</div>
+                <div class="hint">اضغط أو اسحب الملف هنا (.bin)</div>
+                <div class="filename" id="name-m-target"></div>
+            </div>
+
+            <button class="btn" id="process-m-btn" disabled>
+                ⚡ تعديل يدوي وتحميل
+            </button>
+
+            <div class="loading" id="loading-m">
+                <div class="spinner"></div>
+                <p>جارٍ المعالجة... الرجاء الانتظار</p>
+            </div>
+
+            <div class="result" id="result-m"></div>
+        </div>
+
+    </div>
+
+    <!-- TAB: Inspect -->
+    <div id="tab-inspect" class="tab-content">
+
+        <div class="card">
+            <h2>🔍 فحص ملف</h2>
+            <p style="color:#888; font-size:13px; margin-bottom:12px;">
+                ارفع ملف لعرض بصمته وقيمة الآيدي بداخله
+            </p>
+
+            <div class="file-zone" id="zone-inspect">
+                <input type="file" id="file-inspect" accept=".bin">
+                <div class="icon">🔬</div>
+                <div class="title">اختر ملف للفحص</div>
+                <div class="hint">اضغط لاختيار ملف .bin</div>
+                <div class="filename" id="name-inspect"></div>
+            </div>
+
+            <div id="inspect-result"></div>
+        </div>
+
+    </div>
+
+    <!-- TAB: About -->
+    <div id="tab-about" class="tab-content">
+        <div class="card">
+            <h2>ℹ️ عن البرنامج</h2>
+
+            <p style="margin-bottom:15px;">
+                <span class="badge">v1.0 Pro</span>
+                <span class="badge green">Web Edition</span>
+                <span class="badge orange">يعمل على أي متصفح</span>
+            </p>
+
+            <h3 style="color:#4fc3f7; margin: 15px 0 8px;">🎯 الوظيفة</h3>
+            <p style="color:#b0b0b0; font-size:14px;">
+                أداة لنقل الآيدي (Customer ID) من سوفت شغّال إلى سوفت آخر،
+                مع إصلاح الحماية (CRC-32/MPEG-2) تلقائياً، ليشتغل السوفت
+                الجديد على نفس الرسيفر بدون مشاكل.
+            </p>
+
+            <h3 style="color:#4fc3f7; margin: 15px 0 8px;">📺 البصمات المدعومة</h3>
+            <ul style="color:#b0b0b0; font-size:14px; padding-right:22px;">
+                <li><strong style="color:#64ffda;">BIN_0S</strong> — الآيدي @ +0x09</li>
+                <li><strong style="color:#64ffda;">SPHE</strong> — الآيدي @ +0x17 (مع CRC @ +0xFC)</li>
+            </ul>
+
+            <h3 style="color:#4fc3f7; margin: 15px 0 8px;">⚙️ المعالجات المدعومة</h3>
+            <ul style="color:#b0b0b0; font-size:14px; padding-right:22px;">
+                <li>Sunplus 1506 (وضع يدوي)</li>
+                <li>Sunplus Vanilla 2507 / 2507L / 2517</li>
+                <li>كل السوفتات اللي بتبدأ بـ BIN_0S أو SPHE</li>
+            </ul>
+
+            <h3 style="color:#4fc3f7; margin: 15px 0 8px;">🔐 الحماية</h3>
+            <p style="color:#b0b0b0; font-size:14px;">
+                CRC-32/MPEG-2 — poly=0x04C11DB7, init=0xFFFFFFFF<br>
+                تُحسب على 0xFC بايت من SPHE، وتُكتب معكوسة (LE) عند SPHE+0xFC
+            </p>
+
+            <h3 style="color:#4fc3f7; margin: 15px 0 8px;">🤲 دعاء</h3>
+            <p style="color:#b0b0b0; font-size:14px;">
+                هذا العمل صدقة لله — أسأل الله أن يجعله مكسباً للجميع
+                وعلماً نافعاً ينتفع به.<br>
+                <strong style="color:#66bb6a;">"خير الناس أنفعهم للناس"</strong>
+            </p>
+
+            <div style="margin-top:20px; padding:15px; background:#1a1a1a;
+                        border-radius:8px; border-right:3px solid #c62828;">
+                <strong style="color:#ef5350;">⚠️ إخلاء المسؤولية</strong>
+                <p style="color:#888; font-size:12px; margin-top:6px;">
+                    البرنامج مقدم "كما هو" بدون أي ضمانات. المستخدم مسؤول
+                    بالكامل عن استخدامه. Sunplus علامة تجارية مسجلة لمالكها.
+                    البرنامج غير مرتبط بأي شركة مصنّعة.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        © 2025 <span class="name">Ashraf Bedair</span> — جميع الحقوق محفوظة
+        <br>
+        صُنع بـ <span class="heart">💚</span> لخدمة إخواني
+    </div>
+
+</div>
+
+<script>
+// ============================================================
+// Tabs
+// ============================================================
+function switchTab(evt, name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+    evt.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ============================================================
+// File Zone Helper
+// ============================================================
+function setupZone(zoneId, inputId, nameId, onChange) {
+    const zone = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
+    const nameEl = document.getElementById(nameId);
+
+    zone.addEventListener('click', () => input.click());
+
+    zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('active');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('active'));
+
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('active');
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+
+    input.addEventListener('change', () => {
+        if (input.files.length) {
+            nameEl.textContent = '✓ ' + input.files[0].name;
+            zone.classList.add('has-file');
+        } else {
+            nameEl.textContent = '';
+            zone.classList.remove('has-file');
+        }
+        if (onChange) onChange();
+    });
+}
+
+// ============================================================
+// دالة مساعدة للمعالجة (مع مؤقت)
+// ============================================================
+async function processFiles(endpoint, formData, loadingId, resultId, btn, filenamePrefix, isManual) {
+    const loading = document.getElementById(loadingId);
+    const result = document.getElementById(resultId);
+
+    btn.disabled = true;
+    loading.classList.add('active');
+    loading.innerHTML = '<div class="spinner"></div><p>جارٍ المعالجة... الرجاء الانتظار</p>';
+    result.className = 'result';
+    result.innerHTML = '';
+
+    // مؤقت
+    let seconds = 0;
+    const timerEl = document.createElement('p');
+    timerEl.style.color = '#4fc3f7';
+    timerEl.style.marginTop = '10px';
+    timerEl.textContent = '⏱️ الوقت المنقضي: 0 ثانية';
+    loading.appendChild(timerEl);
+
+    const timer = setInterval(() => {
+        seconds++;
+        timerEl.textContent = '⏱️ الوقت المنقضي: ' + seconds + ' ثانية';
+        if (seconds === 15) {
+            timerEl.textContent += ' — جارٍ المعالجة...';
+            timerEl.style.color = '#ffb74d';
+        }
+        if (seconds === 45) {
+            timerEl.textContent = '⚠️ العملية بتاخد وقت طويل...';
+            timerEl.style.color = '#ef5350';
+        }
+    }, 1000);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 180000);
+
+    try {
+        const resp = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({error: 'خطأ غير معروف'}));
+            throw new Error(err.error || 'فشلت المعالجة');
+        }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+
+        // اسم الملف
+        const originalName = formData.get('target').name;
+        const filename = filenamePrefix + originalName;
+
+        // هيدرز
+        const oldId = resp.headers.get('X-Old-ID') || '—';
+        const newId = resp.headers.get('X-New-ID') || '—';
+        const crcInfo = resp.headers.get('X-CRC-Info') || '—';
+
+        let extraInfo = '';
+        if (isManual) {
+            const usedOffset = resp.headers.get('X-Offset') || '—';
+            const usedLength = resp.headers.get('X-Length') || '—';
+            extraInfo = `
+                <div class="info-item">
+                    <div class="label">العنوان المستخدم</div>
+                    <div class="value">${usedOffset}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">الطول</div>
+                    <div class="value">${usedLength} بايت</div>
+                </div>
+            `;
+        } else {
+            const sigOrig = resp.headers.get('X-Sig-Original') || '—';
+            const sigTarget = resp.headers.get('X-Sig-Target') || '—';
+            const origOff = resp.headers.get('X-Orig-Offset') || '—';
+            const targetOff = resp.headers.get('X-Target-Offset') || '—';
+            extraInfo = `
+                <div class="info-item">
+                    <div class="label">بصمة الأصلي</div>
+                    <div class="value">${sigOrig}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">بصمة الهدف</div>
+                    <div class="value">${sigTarget}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">موضع الأصلي</div>
+                    <div class="value">${origOff}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">موضع الهدف</div>
+                    <div class="value">${targetOff}</div>
+                </div>
+            `;
+        }
+
+        result.className = 'result success';
+        result.innerHTML = `
+            <h3>✅ تم التعديل بنجاح! (خلال ${seconds} ثانية)</h3>
+            <div class="info-grid">
+                ${extraInfo}
+                <div class="info-item">
+                    <div class="label">الآيدي القديم</div>
+                    <div class="value">${oldId}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">الآيدي الجديد</div>
+                    <div class="value">${newId}</div>
+                </div>
+                <div class="info-item full">
+                    <div class="label">الحماية (CRC-32/MPEG-2)</div>
+                    <div class="value">${crcInfo}</div>
+                </div>
+            </div>
+            <a href="${url}" download="${filename}" class="download-btn">
+                ⬇️ تحميل السوفت المعدّل
+            </a>
+        `;
+
+        // تحميل تلقائي
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+    } catch (e) {
+        if (e.name === 'AbortError') {
+            result.className = 'result error';
+            result.innerHTML = '<h3>⏱️ انتهت مدة الانتظار</h3><p>العملية أخدت أكتر من 3 دقايق. جرب ملف أصغر أو نت أسرع.</p>';
+        } else {
+            result.className = 'result error';
+            result.innerHTML = `<h3>❌ خطأ</h3><p>${e.message}</p>`;
+        }
+    } finally {
+        clearInterval(timer);
+        clearTimeout(timeoutId);
+        loading.innerHTML = '<div class="spinner"></div><p>جارٍ المعالجة... الرجاء الانتظار</p>';
+        loading.classList.remove('active');
+        btn.disabled = false;
+    }
+}
+
+// ============================================================
+// Vanilla Mode
+// ============================================================
+const fileOrig = document.getElementById('file-original');
+const fileTarget = document.getElementById('file-target');
+const processBtn = document.getElementById('process-btn');
+
+function updateBtn() {
+    processBtn.disabled = !(fileOrig.files.length && fileTarget.files.length);
+}
+
+setupZone('zone-original', 'file-original', 'name-original', updateBtn);
+setupZone('zone-target', 'file-target', 'name-target', updateBtn);
+
+processBtn.addEventListener('click', () => {
+    const formData = new FormData();
+    formData.append('original', fileOrig.files[0]);
+    formData.append('target', fileTarget.files[0]);
+    processFiles('/api/process-vanilla', formData, 'loading', 'result',
+                 processBtn, 'Modified_Vanilla_', false);
+});
+
+// ============================================================
+// Manual 1506 Mode
+// ============================================================
+const fileMOrig = document.getElementById('file-m-original');
+const fileMTarget = document.getElementById('file-m-target');
+const processMBtn = document.getElementById('process-m-btn');
+
+function updateMBtn() {
+    processMBtn.disabled = !(fileMOrig.files.length && fileMTarget.files.length);
+}
+
+setupZone('zone-m-original', 'file-m-original', 'name-m-original', updateMBtn);
+setupZone('zone-m-target', 'file-m-target', 'name-m-target', updateMBtn);
+
+processMBtn.addEventListener('click', () => {
+    const offset = document.getElementById('manual-offset').value.trim();
+    const length = document.getElementById('manual-length').value;
+
+    if (!offset.match(/^[0-9A-Fa-f]+$/)) {
+        alert('العنوان لازم يكون Hex (مثل: 01A000)');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('original', fileMOrig.files[0]);
+    formData.append('target', fileMTarget.files[0]);
+    formData.append('offset', offset);
+    formData.append('length', length);
+    processFiles('/api/process-1506', formData, 'loading-m', 'result-m',
+                 processMBtn, 'Modified_1506_', true);
+});
+
+// ============================================================
+// Inspect File
+// ============================================================
+const fileInspect = document.getElementById('file-inspect');
+const inspectResult = document.getElementById('inspect-result');
+
+setupZone('zone-inspect', 'file-inspect', 'name-inspect', null);
+
+fileInspect.addEventListener('change', async () => {
+    if (!fileInspect.files.length) return;
+
+    const formData = new FormData();
+    formData.append('file', fileInspect.files[0]);
+
+    inspectResult.innerHTML = '<p style="color:#4fc3f7; padding:15px;">🔍 جارٍ الفحص...</p>';
+
+    try {
+        const resp = await fetch('/api/inspect', { method: 'POST', body: formData });
+        const data = await resp.json();
+
+        if (data.error) {
+            inspectResult.innerHTML = `<p style="color:#ef5350; padding:15px;">❌ ${data.error}</p>`;
+            return;
+        }
+
+        inspectResult.innerHTML = `
+            <div class="info-grid" style="margin-top:12px;">
+                <div class="info-item">
+                    <div class="label">الحجم</div>
+                    <div class="value">${data.size.toLocaleString()} بايت (${data.size_mb} MB)</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">البصمة</div>
+                    <div class="value">${data.signature}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">موضع البصمة</div>
+                    <div class="value">${data.signature_offset}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">موضع الآيدي</div>
+                    <div class="value">${data.id_offset}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">قيمة الآيدي</div>
+                    <div class="value" style="color:#64ffda;">[ ${data.id_value} ]</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">قيمة الحماية (CRC)</div>
+                    <div class="value" style="color:#ffb74d;">${data.crc_value}</div>
+                </div>
+                <div class="info-item full">
+                    <div class="label">Magic Header (16 بايت)</div>
+                    <div class="value">${data.header}</div>
+                </div>
+                <div class="info-item full">
+                    <div class="label">MD5</div>
+                    <div class="value">${data.hashes.MD5}</div>
+                </div>
+                <div class="info-item full">
+                    <div class="label">SHA256</div>
+                    <div class="value" style="font-size:11px;">${data.hashes.SHA256}</div>
+                </div>
+            </div>
+        `;
+    } catch (e) {
+        inspectResult.innerHTML = `<p style="color:#ef5350; padding:15px;">❌ ${e.message}</p>`;
+    }
+});
+</script>
+
+</body>
+</html>
